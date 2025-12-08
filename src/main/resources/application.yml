@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: genericLLMAdapter
+
+  ai:
+    huggingface:
+      chat:
+        enabled: true
+        # Hugging Face Inference endpoint
+        # If you use the public Inference API, you can omit base-url
+        base-url: https://api-inference.huggingface.co
+        api-key: SECRETStore
+        options:
+          model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+          temperature: 0.7
+          max_new_tokens: 256
+
+server:
+  port: 8080
