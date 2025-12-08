@@ -1,0 +1,4 @@
+package de.angr.genericllmadapter.dto;
+
+public record ChatReply(String prompt, String response) {
+}
