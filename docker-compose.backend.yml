@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: llm_postgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - llm_network
+
+  backend:
+    build: ./genericLLMAdapter
+    container_name: llm_backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_FLYWAY_USER: postgres
+      SPRING_FLYWAY_PASSWORD: password
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - llm_network
+
+volumes:
+  postgres_data:
+
+
+networks:
+  llm_network:
+    name: llm_network
