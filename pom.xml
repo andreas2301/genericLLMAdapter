@@ -134,12 +134,19 @@
             <artifactId>spring-ai-huggingface-spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- Optional: devtools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- Rate Limiting -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>8.10.1</version>
+        </dependency>
+
 
         <!-- Tests -->
         <dependency>

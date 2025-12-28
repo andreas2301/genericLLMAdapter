@@ -3,6 +3,7 @@ package de.angr2301.genericllmadapter.domain.chat;
 import de.angr2301.genericllmadapter.domain.user.User;
 import de.angr2301.genericllmadapter.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatService {
 
     private final SessionRepository sessionRepository;
@@ -56,6 +58,7 @@ public class ChatService {
 
         User user = session.getUser();
         String apiKey = getApiKeyForProvider(user, provider);
+        log.debug("Setting up LLM call for provider: {}", provider);
 
         // 1. Save User Message
         InteractionLog userLog = InteractionLog.builder()
@@ -79,37 +82,41 @@ public class ChatService {
         }
 
         // 3. Call LLM
+        log.debug("Creating chat model for provider: {}", provider);
         ChatModel chatModel = llmProviderFactory.createChatModel(provider, apiKey);
+        log.debug("Calling LLM...");
         ChatResponse response = chatModel.call(new Prompt(messages));
         String reply = response.getResult().toString();
-        /*String reply = response.getResults().stream()
-                .map(result -> {
-                    // Case 1: Generation → Output → AssistantMessage
-                    if (result.getOutput() instanceof AssistantMessage msg) {
-                        return msg.getContent();
-                    }
-
-                    // Case 2: Generation → Output → something with getContent()
-                    if (result.getOutput() != null && result.getOutput().getContent() != null) {
-                        return result.getOutput().getContent();
-                    }
-
-                    // Case 3: Direct AssistantMessage in results
-                    if (result instanceof AssistantMessage msg) {
-                        return msg.getContent();
-                    }
-
-                    // Case 4: Direct content field
-                    if (result.getContent() != null) {
-                        return result.getContent();
-                    }
-
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No content returned by LLM"));*/
-
+        log.debug("LLM responded with content length: {}", reply.length());
+        /*
+         * String reply = response.getResults().stream()
+         * .map(result -> {
+         * // Case 1: Generation → Output → AssistantMessage
+         * if (result.getOutput() instanceof AssistantMessage msg) {
+         * return msg.getContent();
+         * }
+         * 
+         * // Case 2: Generation → Output → something with getContent()
+         * if (result.getOutput() != null && result.getOutput().getContent() != null) {
+         * return result.getOutput().getContent();
+         * }
+         * 
+         * // Case 3: Direct AssistantMessage in results
+         * if (result instanceof AssistantMessage msg) {
+         * return msg.getContent();
+         * }
+         * 
+         * // Case 4: Direct content field
+         * if (result.getContent() != null) {
+         * return result.getContent();
+         * }
+         * 
+         * return null;
+         * })
+         * .filter(Objects::nonNull)
+         * .findFirst()
+         * .orElseThrow(() -> new RuntimeException("No content returned by LLM"));
+         */
 
         // 4. Save Assistant Message
         InteractionLog botLog = InteractionLog.builder()

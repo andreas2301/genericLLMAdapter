@@ -14,13 +14,13 @@ services:
       - llm_network
 
   backend:
-    build: ./genericLLMAdapter
+    build: .
     container_name: llm_backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_FLYWAY_USER: postgres
       SPRING_FLYWAY_PASSWORD: password

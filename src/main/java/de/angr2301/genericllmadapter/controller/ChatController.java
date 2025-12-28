@@ -2,9 +2,8 @@ package de.angr2301.genericllmadapter.controller;
 
 import de.angr2301.genericllmadapter.domain.chat.ChatService;
 import de.angr2301.genericllmadapter.domain.chat.Session;
-import de.angr2301.genericllmadapter.dto.ChatReply;
-import de.angr2301.genericllmadapter.dto.ChatRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
+@Slf4j
 public class ChatController {
 
     private final ChatService chatService;
@@ -23,6 +23,7 @@ public class ChatController {
     @PostMapping("/sessions")
     public Session createSession() {
         String email = getCurrentUserEmail();
+        log.debug("Creating new chat session for user: {}", email);
         return chatService.createSession(email);
     }
 
@@ -35,6 +36,8 @@ public class ChatController {
     @PostMapping("/sessions/{sessionId}/message")
     public ChatReply sendMessage(@PathVariable UUID sessionId, @RequestBody ChatRequest request) {
         String email = getCurrentUserEmail();
+        log.debug("Received message for session {}: {} using provider {}", sessionId, request.prompt(),
+                request.provider());
         String reply = chatService.sendMessage(sessionId, request.prompt(), request.provider(), email);
         return new ChatReply(reply);
     }
