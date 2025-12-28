@@ -3,9 +3,9 @@ spring:
     name: genericLLMAdapter
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/llm_adapter_db
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://localhost:5432/ENK-Trial1
+    username: ENK-APP-USER
+    password: enk2026v1.0
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,6 +19,9 @@ spring:
 
   flyway:
     enabled: true
+    url: jdbc:postgresql://localhost:5432/ENK-Trial1
+    user: ENK-DB-ADMIN
+    password: qwer1234%&/(
     locations: classpath:db/migration
     schemas: defining_data, operational_data, log_data
     default-schema: operational_data

@@ -1,37 +1,46 @@
 package de.angr2301.genericllmadapter.controller;
 
-
+import de.angr2301.genericllmadapter.domain.chat.ChatService;
+import de.angr2301.genericllmadapter.domain.chat.Session;
 import de.angr2301.genericllmadapter.dto.ChatReply;
 import de.angr2301.genericllmadapter.dto.ChatRequest;
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.UserMessage;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/chat")
+@RequiredArgsConstructor
 public class ChatController {
 
-    private final ChatModel chatModel;
+    private final ChatService chatService;
 
-    @Autowired
-    public ChatController(ChatModel chatModel) {
-        this.chatModel = chatModel;
+    @PostMapping("/sessions")
+    public Session createSession() {
+        String email = getCurrentUserEmail();
+        return chatService.createSession(email);
     }
 
-    @PostMapping("/chat")
-    public ChatReply chat(@RequestBody ChatRequest request) {
-        UserMessage userMessage = new UserMessage(request.prompt());
-        Prompt prompt = new Prompt(userMessage);
+    @GetMapping("/sessions")
+    public List<Session> getSessions() {
+        String email = getCurrentUserEmail();
+        return chatService.getUserSessions(email);
+    }
 
-        ChatResponse response = chatModel.call(prompt);
-        AssistantMessage assistantMessage = (AssistantMessage) response.getResult().getOutput();
+    @PostMapping("/sessions/{sessionId}/message")
+    public ChatReply sendMessage(@PathVariable UUID sessionId, @RequestBody ChatRequest request) {
+        String email = getCurrentUserEmail();
+        String reply = chatService.sendMessage(sessionId, request.prompt(), request.provider(), email);
+        return new ChatReply(request.prompt(), reply);
+    }
 
-        String content = assistantMessage.getContent();
-
-        return new ChatReply(request.prompt(), content);
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return ((UserDetails) authentication.getPrincipal()).getUsername();
     }
 }

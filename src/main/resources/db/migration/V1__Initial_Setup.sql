@@ -25,7 +25,8 @@ CREATE SCHEMA IF NOT EXISTS operational_data;
 
 CREATE TABLE operational_data.sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID REFERENCES defining_data.tenants(id),
+    -- tenant_id UUID REFERENCES defining_data.tenants(id), 
+    user_id UUID REFERENCES defining_data.users(id),
     started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_interaction_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB

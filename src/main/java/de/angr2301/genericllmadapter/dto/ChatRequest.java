@@ -1,4 +1,13 @@
 package de.angr2301.genericllmadapter.dto;
 
-public record ChatRequest(String prompt) {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ChatRequest {
+    private String prompt;
+    private String provider;
 }
