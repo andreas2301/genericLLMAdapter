@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -80,7 +81,35 @@ public class ChatService {
         // 3. Call LLM
         ChatModel chatModel = llmProviderFactory.createChatModel(provider, apiKey);
         ChatResponse response = chatModel.call(new Prompt(messages));
-        String reply = response.getResult().getOutput().getContent();
+        String reply = response.getResult().toString();
+        /*String reply = response.getResults().stream()
+                .map(result -> {
+                    // Case 1: Generation → Output → AssistantMessage
+                    if (result.getOutput() instanceof AssistantMessage msg) {
+                        return msg.getContent();
+                    }
+
+                    // Case 2: Generation → Output → something with getContent()
+                    if (result.getOutput() != null && result.getOutput().getContent() != null) {
+                        return result.getOutput().getContent();
+                    }
+
+                    // Case 3: Direct AssistantMessage in results
+                    if (result instanceof AssistantMessage msg) {
+                        return msg.getContent();
+                    }
+
+                    // Case 4: Direct content field
+                    if (result.getContent() != null) {
+                        return result.getContent();
+                    }
+
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No content returned by LLM"));*/
+
 
         // 4. Save Assistant Message
         InteractionLog botLog = InteractionLog.builder()

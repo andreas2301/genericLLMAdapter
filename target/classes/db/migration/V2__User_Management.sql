@@ -1,5 +1,5 @@
 -- 1. Create Users Table
-CREATE TABLE user_data.users (
+CREATE TABLE defining_data.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -13,4 +13,4 @@ CREATE TABLE user_data.users (
 );
 
 -- 2. Index for email lookup
-CREATE INDEX idx_users_email ON user_data.users(email);
+CREATE INDEX idx_users_email ON defining_data.users(email);

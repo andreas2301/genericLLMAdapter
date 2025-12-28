@@ -107,7 +107,7 @@
         <!-- PGVector -->
         <dependency>
             <groupId>com.pgvector</groupId>
-            <artifactId>pgvector-java</artifactId>
+            <artifactId>pgvector</artifactId>
             <version>0.1.6</version>
         </dependency>
 
@@ -161,6 +161,15 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <compilerArgs>--enable-preview</compilerArgs>
                 </configuration>
             </plugin>
         </plugins>
