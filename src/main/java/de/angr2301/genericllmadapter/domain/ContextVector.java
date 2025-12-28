@@ -1,5 +1,6 @@
 package de.angr2301.genericllmadapter.domain;
 
+import de.angr2301.genericllmadapter.domain.chat.Session;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

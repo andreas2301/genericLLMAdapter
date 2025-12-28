@@ -36,7 +36,7 @@ public class ChatController {
     public ChatReply sendMessage(@PathVariable UUID sessionId, @RequestBody ChatRequest request) {
         String email = getCurrentUserEmail();
         String reply = chatService.sendMessage(sessionId, request.prompt(), request.provider(), email);
-        return new ChatReply(request.prompt(), reply);
+        return new ChatReply(reply);
     }
 
     private String getCurrentUserEmail() {

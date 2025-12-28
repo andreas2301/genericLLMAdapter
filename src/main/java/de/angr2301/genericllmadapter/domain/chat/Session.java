@@ -36,3 +36,4 @@ public class Session {
     @Column(name = "last_interaction_at")
     private LocalDateTime lastInteractionAt;
 }
+
