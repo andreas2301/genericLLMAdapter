@@ -1,6 +1,8 @@
 package de.angr2301.genericllmadapter.controller;
 
 import de.angr2301.genericllmadapter.domain.chat.ChatService;
+import de.angr2301.genericllmadapter.domain.chat.InteractionLog;
+import de.angr2301.genericllmadapter.domain.chat.LlmHealthCheckService;
 import de.angr2301.genericllmadapter.domain.chat.Session;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class ChatController {
 
     private final ChatService chatService;
+    private final LlmHealthCheckService llmHealthCheckService;
 
     @PostMapping("/sessions")
     public Session createSession() {
@@ -40,6 +43,39 @@ public class ChatController {
                 request.provider());
         String reply = chatService.sendMessage(sessionId, request.prompt(), request.provider(), email);
         return new ChatReply(reply);
+    }
+
+    @GetMapping("/sessions/{sessionId}/messages")
+    public List<InteractionLog> getMessages(@PathVariable UUID sessionId) {
+        String email = getCurrentUserEmail();
+        return chatService.getMessages(sessionId, email);
+    }
+
+    /**
+     * Get list of available LLM providers for frontend dropdown/selection.
+     * Allows dynamic provider selection without hardcoding provider options.
+     *
+     * Supported providers:
+     * - OPENAI: GPT-4o via https://api.openai.com/v1
+     * - DEEPSEEK: deepseek-chat via https://api.deepseek.com/v1
+     * - HUGGINGFACE: Mistral-7B Instruct via https://router.huggingface.co
+     * - LOCAL_VLLM: Self-hosted LLM on http://localhost:8000/v1
+     *
+     * @return List of available provider names
+     */
+    @GetMapping("/providers")
+    public List<de.angr2301.genericllmadapter.dto.chat.ProviderStatus> getAvailableProviders() {
+        log.debug("Fetching available LLM providers");
+        List<de.angr2301.genericllmadapter.dto.chat.ProviderStatus> providers = new java.util.ArrayList<>();
+
+        providers.add(new de.angr2301.genericllmadapter.dto.chat.ProviderStatus("OPENAI", true));
+        providers.add(new de.angr2301.genericllmadapter.dto.chat.ProviderStatus("DEEPSEEK", true));
+        providers.add(new de.angr2301.genericllmadapter.dto.chat.ProviderStatus("HUGGINGFACE", true));
+
+        boolean isVllmAlive = llmHealthCheckService.isVllmAlive();
+        providers.add(new de.angr2301.genericllmadapter.dto.chat.ProviderStatus("LOCAL_VLLM", isVllmAlive));
+
+        return providers;
     }
 
     private String getCurrentUserEmail() {

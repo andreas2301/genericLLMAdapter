@@ -1,5 +1,6 @@
 package de.angr2301.genericllmadapter.domain.chat;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.angr2301.genericllmadapter.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ public class Session {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     @CreationTimestamp
@@ -36,4 +38,3 @@ public class Session {
     @Column(name = "last_interaction_at")
     private LocalDateTime lastInteractionAt;
 }
-

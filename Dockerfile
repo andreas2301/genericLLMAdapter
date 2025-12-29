@@ -5,7 +5,7 @@ COPY pom.xml .
 COPY src ./src
 # Use the wrapper if available, else use global mvn. Assuming global here for simplicity or copy wrapper.
 # Since we are using a maven image, 'mvn' is available.
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Dmaven.compiler.parameters=true
 
 # Run Stage
 FROM eclipse-temurin:21-jre-alpine

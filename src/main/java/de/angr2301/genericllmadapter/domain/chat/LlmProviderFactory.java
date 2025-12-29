@@ -1,44 +1,56 @@
 package de.angr2301.genericllmadapter.domain.chat;
 
-import de.angr2301.genericllmadapter.feignClients.HuggingfaceFeignClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.api.OpenAiApi;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Factory for creating LLM clients for different providers.
+ * Centralizes provider configuration and client instantiation.
+ */
 @Component
 @Slf4j
 public class LlmProviderFactory {
 
-    @Autowired
-    private HuggingfaceFeignClient huggingfaceFeignClient;
+    @org.springframework.beans.factory.annotation.Value("${vllm.url:http://localhost:8000}")
+    private String vllmUrl;
 
-    public ChatModel createChatModel(String provider, String apiKey) {
-        if (apiKey == null || apiKey.isBlank()) {
-            log.error("API Key is missing for provider: {}", provider);
-            throw new IllegalArgumentException("API Key cannot be empty for provider: " + provider);
+    public LlmClient createChatModel(String provider, String apiKey) {
+        if (provider == null || provider.isBlank()) {
+            log.error("Provider name cannot be null or empty");
+            throw new IllegalArgumentException("Provider name cannot be empty");
         }
 
-        log.debug("Creating ChatModel for provider: {}", provider);
+        // Validate API key for providers that require it
+        if (apiKey == null || apiKey.isBlank()) {
+            if (!"LOCAL_VLLM".equalsIgnoreCase(provider)) {
+                log.error("API Key is missing for provider: {}", provider);
+                throw new IllegalArgumentException("API Key cannot be empty for provider: " + provider);
+            }
+            // LOCAL_VLLM doesn't require an API key
+            apiKey = "dummy";
+        }
 
-        switch (provider.toUpperCase()) {
-            case "OPENAI":
-                return new OpenAiChatModel(new OpenAiApi(apiKey));
+        log.debug("Creating LlmClient for provider: {}", provider);
 
-            case "DEEPSEEK":
-                // DeepSeek is OpenAI compatible
-                return new OpenAiChatModel(new OpenAiApi("https://api.deepseek.com", apiKey));
+        return switch (provider.toUpperCase()) {
+            case "OPENAI" ->
+                new OpenAiCompatibleClient("https://api.openai.com/v1", "gpt-4o", apiKey);
 
-            case "HUGGINGFACE":
-                log.debug("Initializing HuggingfaceChatModel with provided API key");
+            case "DEEPSEEK" ->
+                new OpenAiCompatibleClient("https://api.deepseek.com/v1", "deepseek-chat", apiKey);
+
+            case "LOCAL_VLLM" ->
+                new OpenAiCompatibleClient(vllmUrl + "/v1", "Qwen/Qwen2.5-1.5B-Instruct", apiKey);
+
+            case "HUGGINGFACE" -> {
                 String modelId = "mistralai/Mistral-7B-Instruct-v0.3";
-                return new LocalHuggingfaceChatModel(huggingfaceFeignClient, apiKey, modelId);
+                yield new HuggingFaceClient(modelId, apiKey);
+            }
 
-            default:
+            default -> {
                 log.error("Unsupported provider: {}", provider);
                 throw new IllegalArgumentException("Unsupported provider: " + provider);
-        }
+            }
+        };
     }
 }

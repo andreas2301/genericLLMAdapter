@@ -1,5 +1,6 @@
 package de.angr2301.genericllmadapter.domain.chat;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,6 +25,7 @@ public class InteractionLog {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id")
+    @JsonIgnore
     private Session session;
 
     @Column(nullable = false)

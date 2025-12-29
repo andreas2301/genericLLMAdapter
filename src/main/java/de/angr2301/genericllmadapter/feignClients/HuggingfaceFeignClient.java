@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(name = "huggingface", url = "https://api-inference.huggingface.co/models")
+@FeignClient(name = "huggingface", url = "https://router.huggingface.co/models")
 public interface HuggingfaceFeignClient {
 
         @PostMapping("/{modelId}")
