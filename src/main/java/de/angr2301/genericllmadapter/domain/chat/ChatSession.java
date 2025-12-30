@@ -18,8 +18,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "sessions", schema = "operational_data")
-public class Session {
+@Table(name = "chat_sessions", schema = "operational_data")
+public class ChatSession {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

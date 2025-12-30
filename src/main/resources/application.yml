@@ -1,3 +1,6 @@
+server:
+  forward-headers-strategy: native
+
 spring:
   application:
     name: genericLLMAdapter
@@ -26,13 +29,44 @@ spring:
     schemas: defining_data, operational_data, log_data, user_data
     default-schema: operational_data
 
+  redis:
+    host: ${REDIS_HOST:redis} # Changed default to 'redis' safely
+    port: 6379
+    timeout: 2000ms
+    jedis:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: 6379
+
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
     huggingface:
       api-key: ${HUGGINGFACE_API_KEY}
 
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+      table-name: operational_data.SPRING_SESSION
+    timeout: 30m
+    cookie:
+      name: SESSION
+      http-only: true
+      secure: true
+      same-site: lax
+      path: /
+
 logging:
   level:
     root: INFO
     de.angr2301.genericLLMAdapter: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.session: DEBUG
+    org.springframework.web: DEBUG

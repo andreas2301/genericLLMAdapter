@@ -12,6 +12,27 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - llm_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: llm_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - llm_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: .
@@ -24,15 +45,21 @@ services:
       SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_FLYWAY_USER: postgres
       SPRING_FLYWAY_PASSWORD: password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - llm_network
 
 volumes:
   postgres_data:
+  redis_data:
 
 
 networks:

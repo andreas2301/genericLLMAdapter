@@ -3,7 +3,8 @@ package de.angr2301.genericllmadapter.controller;
 import de.angr2301.genericllmadapter.domain.chat.ChatService;
 import de.angr2301.genericllmadapter.domain.chat.InteractionLog;
 import de.angr2301.genericllmadapter.domain.chat.LlmHealthCheckService;
-import de.angr2301.genericllmadapter.domain.chat.Session;
+import de.angr2301.genericllmadapter.domain.chat.ChatSession;
+import de.angr2301.genericllmadapter.domain.chat.ChatSessionRepository; // Adding repository if needed, though controller uses service
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -26,14 +27,14 @@ public class ChatController {
     private final LlmHealthCheckService llmHealthCheckService;
 
     @PostMapping("/sessions")
-    public Session createSession() {
+    public ChatSession createSession() {
         String email = getCurrentUserEmail();
         log.debug("Creating new chat session for user: {}", email);
         return chatService.createSession(email);
     }
 
     @GetMapping("/sessions")
-    public List<Session> getSessions() {
+    public List<ChatSession> getSessions() {
         String email = getCurrentUserEmail();
         return chatService.getUserSessions(email);
     }

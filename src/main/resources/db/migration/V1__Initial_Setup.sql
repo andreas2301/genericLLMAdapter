@@ -49,7 +49,7 @@ ON CONFLICT (email) DO NOTHING;
 -- 2. Operational Data Schema (Sessions, Vectors)
 CREATE SCHEMA IF NOT EXISTS operational_data;
 
-CREATE TABLE operational_data.sessions (
+CREATE TABLE operational_data.chat_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES user_data.users(id),
     started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -59,7 +59,7 @@ CREATE TABLE operational_data.sessions (
 
 CREATE TABLE operational_data.context_vectors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    session_id UUID REFERENCES operational_data.sessions(id),
+    session_id UUID REFERENCES operational_data.chat_sessions(id),
     content TEXT,
     embedding vector(1536), -- Assuming OpenAI 1536 dims
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -74,7 +74,7 @@ CREATE SCHEMA IF NOT EXISTS log_data;
 
 CREATE TABLE log_data.interaction_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    session_id UUID REFERENCES operational_data.sessions(id),
+    session_id UUID REFERENCES operational_data.chat_sessions(id),
     role VARCHAR(50) NOT NULL, -- USER, ASSISTANT, SYSTEM
     content TEXT NOT NULL,
     reasoning TEXT,
@@ -85,4 +85,4 @@ CREATE TABLE log_data.interaction_logs (
 );
 
 -- Basic RLS
-ALTER TABLE operational_data.sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE operational_data.chat_sessions ENABLE ROW LEVEL SECURITY;

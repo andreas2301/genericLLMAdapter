@@ -26,7 +26,7 @@ public class InteractionLog {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id")
     @JsonIgnore
-    private Session session;
+    private ChatSession session;
 
     @Column(nullable = false)
     private String role; // USER, ASSISTANT, SYSTEM

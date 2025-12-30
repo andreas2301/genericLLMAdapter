@@ -4,12 +4,14 @@ import de.angr2301.genericllmadapter.domain.ContextVector;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
 
-@Repository
+/**
+ * JPA Repository für ContextVector-Entitäten (pgVector-Integration).
+ * Spring erkennt dieses Interface über @EnableJpaRepositories automatisch.
+ */
 public interface ContextVectorRepository extends JpaRepository<ContextVector, UUID> {
 
     // Native query for Cosine Similarity

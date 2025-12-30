@@ -1,6 +1,6 @@
 package de.angr2301.genericllmadapter.domain;
 
-import de.angr2301.genericllmadapter.domain.chat.Session;
+import de.angr2301.genericllmadapter.domain.chat.ChatSession;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,7 +24,7 @@ public class ContextVector {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id")
-    private Session session;
+    private ChatSession session;
 
     @Column(columnDefinition = "text")
     private String content;

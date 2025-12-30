@@ -21,7 +21,7 @@ import java.util.UUID;
 @Slf4j
 public class ChatService {
 
-    private final SessionRepository sessionRepository;
+    private final ChatSessionRepository chatSessionRepository;
     private final InteractionLogRepository interactionLogRepository;
     private final UserRepository userRepository;
     private final LlmProviderFactory llmProviderFactory;
@@ -29,25 +29,25 @@ public class ChatService {
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @Transactional
-    public Session createSession(String email) {
+    public ChatSession createSession(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Session session = Session.builder()
+        ChatSession session = ChatSession.builder()
                 .user(user)
                 .build();
 
-        return sessionRepository.save(session);
+        return chatSessionRepository.save(session);
     }
 
-    public List<Session> getUserSessions(String email) {
+    public List<ChatSession> getUserSessions(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        return sessionRepository.findByUserIdOrderByStartedAtDesc(user.getId());
+        return chatSessionRepository.findByUserIdOrderByStartedAtDesc(user.getId());
     }
 
     public List<InteractionLog> getMessages(UUID sessionId, String email) {
-        Session session = sessionRepository.findById(sessionId)
+        ChatSession session = chatSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
 
         if (!session.getUser().getEmail().equals(email)) {
@@ -59,7 +59,7 @@ public class ChatService {
 
     @Transactional
     public ChatReply sendMessage(UUID sessionId, String content, String provider, String email) {
-        Session session = sessionRepository.findById(sessionId)
+        ChatSession session = chatSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
 
         if (!session.getUser().getEmail().equals(email)) {
@@ -150,7 +150,7 @@ public class ChatService {
 
         // Update session timestamp
         session.setLastInteractionAt(java.time.LocalDateTime.now());
-        sessionRepository.save(session);
+        chatSessionRepository.save(session);
 
         return new ChatReply(content, contentOnly, reasoning, metrics);
     }
