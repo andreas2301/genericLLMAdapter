@@ -6,6 +6,8 @@ import de.angr2301.genericllmadapter.domain.chat.LlmHealthCheckService;
 import de.angr2301.genericllmadapter.domain.chat.Session;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import de.angr2301.genericllmadapter.dto.chat.ChatReply;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,13 +38,14 @@ public class ChatController {
         return chatService.getUserSessions(email);
     }
 
-    @PostMapping("/sessions/{sessionId}/message")
-    public ChatReply sendMessage(@PathVariable UUID sessionId, @RequestBody ChatRequest request) {
-        String email = getCurrentUserEmail();
-        log.debug("Received message for session {}: {} using provider {}", sessionId, request.prompt(),
-                request.provider());
-        String reply = chatService.sendMessage(sessionId, request.prompt(), request.provider(), email);
-        return new ChatReply(reply);
+    @PostMapping("/sessions/{sessionId}/messages")
+    public ResponseEntity<de.angr2301.genericllmadapter.dto.chat.ChatReply> sendMessage(
+            @PathVariable UUID sessionId,
+            @RequestBody de.angr2301.genericllmadapter.controller.ChatRequest request,
+            Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return ResponseEntity.ok(
+                chatService.sendMessage(sessionId, request.prompt(), request.provider(), userDetails.getUsername()));
     }
 
     @GetMapping("/sessions/{sessionId}/messages")

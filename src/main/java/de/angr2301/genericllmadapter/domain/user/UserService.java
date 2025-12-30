@@ -27,7 +27,7 @@ public class UserService {
      * @param email User email
      * @return User object
      * @throws IllegalArgumentException if email is null
-     * @throws RuntimeException if user not found
+     * @throws RuntimeException         if user not found
      */
     public User getUserByEmail(String email) {
         if (email == null) {
@@ -36,7 +36,7 @@ public class UserService {
         }
 
         log.debug("Looking up user by email: {}", maskEmail(email));
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> {
                     log.warn("User not found for email: {}", maskEmail(email));
                     return new RuntimeException("User not found: " + email);
@@ -49,7 +49,7 @@ public class UserService {
      * @param id User ID
      * @return User object
      * @throws IllegalArgumentException if id is null
-     * @throws RuntimeException if user not found
+     * @throws RuntimeException         if user not found
      */
     public User getUserById(UUID id) {
         if (id == null) {
@@ -68,7 +68,7 @@ public class UserService {
     /**
      * Update user's API keys.
      *
-     * @param userId User ID
+     * @param userId  User ID
      * @param request API key request with OpenAI, HuggingFace, and DeepSeek keys
      * @return Updated user object
      */

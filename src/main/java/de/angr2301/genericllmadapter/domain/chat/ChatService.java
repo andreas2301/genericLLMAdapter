@@ -1,5 +1,8 @@
 package de.angr2301.genericllmadapter.domain.chat;
 
+import de.angr2301.genericllmadapter.dto.analysis.AnalysisRequest;
+import de.angr2301.genericllmadapter.dto.analysis.AnalysisResponse;
+import de.angr2301.genericllmadapter.dto.chat.ChatReply;
 import de.angr2301.genericllmadapter.domain.user.User;
 import de.angr2301.genericllmadapter.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -21,10 +25,12 @@ public class ChatService {
     private final InteractionLogRepository interactionLogRepository;
     private final UserRepository userRepository;
     private final LlmProviderFactory llmProviderFactory;
+    private final de.angr2301.genericllmadapter.feign.AnalysisClient analysisClient;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @Transactional
     public Session createSession(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Session session = Session.builder()
@@ -35,7 +41,7 @@ public class ChatService {
     }
 
     public List<Session> getUserSessions(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return sessionRepository.findByUserIdOrderByStartedAtDesc(user.getId());
     }
@@ -52,7 +58,7 @@ public class ChatService {
     }
 
     @Transactional
-    public String sendMessage(UUID sessionId, String content, String provider, String email) {
+    public ChatReply sendMessage(UUID sessionId, String content, String provider, String email) {
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
 
@@ -90,44 +96,55 @@ public class ChatService {
         LlmResponse response = llmClient.generateContent(messages);
 
         // Validate response
-        if (response == null) {
-            log.error("Received null response from LLM provider: {}", provider);
-            throw new RuntimeException("LLM returned null response");
-        }
-
-        if (response.getCandidates() == null || response.getCandidates().isEmpty()) {
-            log.error("No candidates in LLM response from provider: {}", provider);
-            throw new RuntimeException("LLM returned empty candidates");
+        if (response == null || response.getCandidates() == null || response.getCandidates().isEmpty()) {
+            throw new RuntimeException("Invalid LLM response");
         }
 
         LlmResponse.Candidate firstCandidate = response.getCandidates().get(0);
-        if (firstCandidate == null || firstCandidate.getContent() == null) {
-            log.error("Invalid candidate structure in LLM response from provider: {}", provider);
-            throw new RuntimeException("Invalid LLM response structure");
+        String fullReply = firstCandidate.getContent().getParts().get(0).getText();
+
+        log.debug("LLM responded with content length: {}", fullReply.length());
+
+        // 4. Extract Reasoning (Thinking)
+        String reasoning = null;
+        String contentOnly = fullReply;
+
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("<think>(.*?)</think>", java.util.regex.Pattern.DOTALL).matcher(fullReply);
+        if (matcher.find()) {
+            reasoning = matcher.group(1).trim();
+            contentOnly = fullReply.replace(matcher.group(0), "").trim();
         }
 
-        LlmResponse.Content responseContent = firstCandidate.getContent();
-        if (responseContent.getParts() == null || responseContent.getParts().isEmpty()) {
-            log.error("No parts in LLM response content from provider: {}", provider);
-            throw new RuntimeException("LLM response content has no parts");
+        // 5. Call Analysis Service
+        log.debug("Triggering analysis for session: {}", sessionId);
+        Map<String, Object> metrics = null;
+        try {
+            AnalysisRequest analysisRequest = new AnalysisRequest(
+                    sessionId.toString(), content, contentOnly, "guide");
+            AnalysisResponse analysisResponse = analysisClient.analyze(analysisRequest);
+            metrics = analysisResponse.getMetrics();
+        } catch (Exception e) {
+            log.error("Analysis service call failed", e);
         }
 
-        LlmResponse.Part firstPart = responseContent.getParts().get(0);
-        String reply = firstPart.getText();
-
-        if (reply == null || reply.isEmpty()) {
-            log.error("Empty text in LLM response from provider: {}", provider);
-            throw new RuntimeException("LLM returned empty response text");
+        String metricsJson = null;
+        if (metrics != null) {
+            try {
+                metricsJson = objectMapper.writeValueAsString(metrics);
+            } catch (Exception e) {
+                log.error("Failed to serialize metrics", e);
+            }
         }
 
-        log.debug("LLM responded with content length: {}", reply.length());
-
-        // 4. Save Assistant Message
+        // 6. Save Assistant Message
         InteractionLog botLog = InteractionLog.builder()
                 .session(session)
                 .role("ASSISTANT")
-                .content(reply)
+                .content(contentOnly)
+                .reasoning(reasoning)
                 .provider(provider)
+                .metrics(metricsJson)
                 .build();
         interactionLogRepository.save(botLog);
 
@@ -135,7 +152,7 @@ public class ChatService {
         session.setLastInteractionAt(java.time.LocalDateTime.now());
         sessionRepository.save(session);
 
-        return reply;
+        return new ChatReply(content, contentOnly, reasoning, metrics);
     }
 
     private String getApiKeyForProvider(User user, String provider) {

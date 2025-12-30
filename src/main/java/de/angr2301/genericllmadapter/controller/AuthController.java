@@ -24,7 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
  * REST Controller for user authentication and registration.
  * Features:
  * - Input validation (email format, password strength)
- * - Proper HTTP status codes (409 Conflict, 401 Unauthorized, 403 Forbidden, etc.)
+ * - Proper HTTP status codes (409 Conflict, 401 Unauthorized, 403 Forbidden,
+ * etc.)
  * - Email masking in logs for privacy
  * - Comprehensive error logging
  * - Exception handling for all edge cases
@@ -52,20 +53,20 @@ public class AuthController {
             String email = request.getEmail().trim();
             String password = request.getPassword();
 
-            // 2. Validate email format
-            if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-                log.debug("Registration attempt with invalid email format: {}", maskEmail(email));
+            // 2. Validate email format (Simple check for non-empty)
+            if (email.length() < 3) {
+                log.debug("Registration attempt with invalid username/email: {}", maskEmail(email));
                 return ResponseEntity.badRequest().build();
             }
 
-            // 3. Validate password strength (minimum 8 characters)
-            if (password.length() < 8) {
+            // 3. Validate password strength (Minimum 4 characters for dev)
+            if (password.length() < 4) {
                 log.debug("Registration attempt with weak password for email: {}", maskEmail(email));
                 return ResponseEntity.badRequest().build();
             }
 
             // 4. Check if user already exists (409 Conflict instead of 400 Bad Request)
-            if (userRepository.findByEmail(email).isPresent()) {
+            if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
                 log.warn("Registration attempt with existing email: {}", maskEmail(email));
                 return ResponseEntity.status(HttpStatus.CONFLICT).build();
             }
@@ -122,7 +123,7 @@ public class AuthController {
             }
 
             // 3. Fetch user (should exist after successful authentication)
-            User user = userRepository.findByEmail(email)
+            User user = userRepository.findByEmailIgnoreCase(email)
                     .orElseThrow(() -> {
                         log.error("User not found after successful authentication: {}", maskEmail(email));
                         return new IllegalStateException("User authentication succeeded but user not found");
@@ -156,7 +157,8 @@ public class AuthController {
 
     /**
      * Create Spring Security UserDetails from domain User object.
-     * Helper method to remove code duplication between register() and authenticate().
+     * Helper method to remove code duplication between register() and
+     * authenticate().
      */
     private org.springframework.security.core.userdetails.UserDetails createUserDetails(User user) {
         return org.springframework.security.core.userdetails.User

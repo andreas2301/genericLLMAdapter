@@ -39,6 +39,12 @@ public class InteractionLog {
 
     private String provider;
 
+    @Column(columnDefinition = "TEXT")
+    private String metrics;
+
+    @Column(columnDefinition = "TEXT")
+    private String reasoning;
+
     @CreationTimestamp
     private LocalDateTime timestamp;
 }

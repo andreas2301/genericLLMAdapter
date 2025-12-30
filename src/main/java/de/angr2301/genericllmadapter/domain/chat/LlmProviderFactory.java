@@ -40,10 +40,11 @@ public class LlmProviderFactory {
                 new OpenAiCompatibleClient("https://api.deepseek.com/v1", "deepseek-chat", apiKey);
 
             case "LOCAL_VLLM" ->
-                new OpenAiCompatibleClient(vllmUrl + "/v1", "Qwen/Qwen2.5-1.5B-Instruct", apiKey);
+                new OpenAiCompatibleClient(vllmUrl + "/v1", "Qwen/Qwen2.5-0.5B-Instruct", apiKey);
 
             case "HUGGINGFACE" -> {
-                String modelId = "mistralai/Mistral-7B-Instruct-v0.3";
+                //String modelId = "mistralai/Mistral-7B-Instruct-v0.3";
+                String modelId = "deepseek-ai/DeepSeek-R1:fastest";
                 yield new HuggingFaceClient(modelId, apiKey);
             }
 
