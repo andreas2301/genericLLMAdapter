@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .sessionFixation().migrateSession()) // Protect against session fixation
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(authenticationProvider())
-                .requiresChannel(channel -> channel.anyRequest().requiresSecure()) // Enforce HTTPS
+                // HTTPS enforced by Nginx reverse proxy, not at application level
                 .headers(headers -> headers
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)

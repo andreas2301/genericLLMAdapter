@@ -87,7 +87,12 @@ public class AuthController {
             authenticateUser(email, password, httpRequest, httpResponse);
             log.info("User auto-logged in after registration: {}", email);
 
-            return ResponseEntity.ok(new AuthenticationResponse("Registration successful"));
+            AuthenticationResponse.UserInfo userInfo = new AuthenticationResponse.UserInfo(
+                    user.getId().toString(),
+                    user.getEmail(),
+                    user.getRole().name());
+
+            return ResponseEntity.ok(new AuthenticationResponse("Registration successful", userInfo));
 
         } catch (Exception e) {
             log.error("Unexpected error during registration", e);
@@ -119,7 +124,16 @@ public class AuthController {
 
             log.info("User logged in successfully: {}", email);
 
-            return ResponseEntity.ok(new AuthenticationResponse("Login successful"));
+            // Get the authenticated user and return in response
+            User user = userRepository.findByEmailIgnoreCase(email)
+                    .orElseThrow(() -> new RuntimeException("User not found after authentication"));
+
+            AuthenticationResponse.UserInfo userInfo = new AuthenticationResponse.UserInfo(
+                    user.getId().toString(),
+                    user.getEmail(),
+                    user.getRole().name());
+
+            return ResponseEntity.ok(new AuthenticationResponse("Login successful", userInfo));
 
         } catch (Exception e) {
             log.error("Unexpected error during authentication", e);

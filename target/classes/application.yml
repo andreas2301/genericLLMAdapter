@@ -58,9 +58,8 @@ spring:
     timeout: 30m
     cookie:
       name: SESSION
-      http-only: true
-      secure: true
-      same-site: lax
+      http-only: false  # Must be false so JavaScript can't read but browser sends it
+      secure: false  # Backend runs on HTTP behind Nginx proxy
       path: /
 
 logging:
